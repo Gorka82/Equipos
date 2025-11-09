@@ -7,10 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let indiceActual = 0;
     // Aquí pon todos los nombres de archivos de imagen que tienes en la carpeta 'imagenes'
     let imagenes = [
-      'foto1.jpg',
-      'foto2.png',
-      'equipo1.jpg',
-      'logo.png'
+      'gorkatr.jpg',
+      'images.jpeg',
+      'marca de agua legalitas.psd',
+      'sithprophecy_esb_pub.jpg'
       // etc
     ];
 
@@ -59,3 +59,4 @@ document.addEventListener('DOMContentLoaded', () => {
     crearIndicadores();
     mostrarImagen(0);
 });
+
