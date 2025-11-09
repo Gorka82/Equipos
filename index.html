@@ -3,39 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carrusel de Imágenes Dinámico</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Carrusel de Imágenes Sencillo</title>
+    <style>
+        /* --- ESTILOS CSS --- */
+
+        /* Estilos generales para centrar el carrusel en la página */
+        body {
+            font-family: sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* Contenedor principal del carrusel */
+        .carousel-container {
+            text-align: center;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Contenedor de la imagen principal con la medida fija 400:600 */
+        .main-image-container {
+            width: 400px;
+            height: 600px;
+            overflow: hidden; /* Oculta las partes de la imagen que sobresalen */
+            margin: 0 auto 20px auto; /* Centra y añade espacio debajo */
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        /* La imagen principal */
+        #main-image {
+            width: 100%;
+            height: 100%;
+            /* ¡Esta es la clave! Ajusta la imagen para cubrir el contenedor sin deformarse */
+            object-fit: cover; 
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        /* Contenedor de las miniaturas */
+        .thumbnails-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px; /* Espacio entre miniaturas */
+            flex-wrap: wrap; /* Permite que las miniaturas pasen a la siguiente línea si no caben */
+        }
+
+        /* Estilo para cada miniatura */
+        .thumbnail {
+            width: 80px;
+            height: 120px; /* Proporción 2:3, similar a 400:600 */
+            object-fit: cover; /* Mantiene la proporción en la miniatura */
+            cursor: pointer;
+            border: 3px solid transparent;
+            opacity: 0.7;
+            transition: all 0.2s ease;
+            border-radius: 4px;
+        }
+
+        /* Efecto al pasar el ratón sobre una miniatura */
+        .thumbnail:hover {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        /* Resalta la miniatura de la imagen activa */
+        .thumbnail.active {
+            border-color: #007bff; /* Un azul para el borde activo */
+            opacity: 1;
+        }
+    </style>
 </head>
 <body>
 
-    <header>
-        <h1>Mi Galería de Imágenes</h1>
-    </header>
+    <div class="carousel-container">
+        <!-- La imagen principal que cambiará -->
+        <div class="main-image-container">
+            <img id="main-image" src="" alt="Imagen principal del carrusel">
+        </div>
 
-    <main>
-        <div class="carrusel-container">
-            <!-- Botón para ir a la imagen anterior -->
-            <button class="nav-button anterior" id="botonAnterior">&#10094;</button>
+        <!-- Aquí se insertarán las miniaturas con JavaScript -->
+        <div id="thumbnails-container" class="thumbnails-container">
+            <!-- Las miniaturas se generarán dinámicamente -->
+        </div>
+    </div>
+
+    <script>
+        // --- CÓDIGO JAVASCRIPT ---
+
+        // PASO 1: AÑADE AQUÍ LOS NOMBRES DE TUS ARCHIVOS DE IMAGEN
+        // Asegúrate de que los archivos estén en la carpeta '/imagenes'
+        const imageFiles = [
+            'gorkatr.jpg',
+            'images.jpeg',
+            'marca de agua legalitas.psd',
+            'sithprophecy_esb_pub.jpg'
+            // ... añade más nombres de archivo aquí
+        ];
+
+        // Obtenemos los elementos del DOM que vamos a manipular
+        const mainImage = document.getElementById('main-image');
+        const thumbnailsContainer = document.getElementById('thumbnails-container');
+
+        let currentIndex = 0; // Índice de la imagen actual
+
+        /**
+         * Muestra la imagen en el índice especificado y actualiza las miniaturas.
+         * @param {number} index - El índice de la imagen a mostrar.
+         */
+        function showImage(index) {
+            // Aseguramos de que el índice esté dentro de los límites del array
+            if (index < 0 || index >= imageFiles.length) {
+                return;
+            }
+
+            // Cambiamos la fuente de la imagen principal
+            mainImage.src = '/imagenes/' + imageFiles[index];
+            mainImage.alt = `Imagen ${index + 1}: ${imageFiles[index]}`;
+
+            // Actualizamos la clase 'active' en las miniaturas
+            // Primero, la quitamos de todas
+            document.querySelectorAll('.thumbnail').forEach(thumb => {
+                thumb.classList.remove('active');
+            });
+            // Luego, la añadimos a la miniatura correspondiente
+            const activeThumbnail = document.querySelector(`.thumbnail[data-index="${index}"]`);
+            if (activeThumbnail) {
+                activeThumbnail.classList.add('active');
+            }
             
-            <!-- El carrusel en sí -->
-            <div class="carrusel">
-                <!-- Las imágenes se cargarán aquí dinámicamente con JavaScript -->
-            </div>
+            // Actualizamos el índice actual
+            currentIndex = index;
+        }
 
-            <!-- Botón para ir a la siguiente imagen -->
-            <button class="nav-button siguiente" id="botonSiguiente">&#10095;</button>
-        </div>
+        /**
+         * Genera las miniaturas en el contenedor correspondiente.
+         */
+        function createThumbnails() {
+            imageFiles.forEach((filename, index) => {
+                const thumbImg = document.createElement('img');
+                thumbImg.src = '/imagenes/' + filename;
+                thumbImg.alt = `Miniatura de ${filename}`;
+                thumbImg.classList.add('thumbnail');
+                
+                // Guardamos el índice en un atributo 'data-*' para saber a qué imagen corresponde
+                thumbImg.dataset.index = index;
 
-        <!-- Indicadores de puntos -->
-        <div class="indicadores" id="contenedorIndicadores">
-            <!-- Los puntos se crearán aquí dinámicamente -->
-        </div>
-    </main>
+                // Añadimos un evento 'click' para mostrar la imagen al hacer clic
+                thumbImg.addEventListener('click', () => {
+                    showImage(index);
+                });
 
-    <footer>
-        <p>Simplemente añade o elimina imágenes en la carpeta 'imagenes/'</p>
-    </footer>
+                thumbnailsContainer.appendChild(thumbImg);
+            });
+        }
+        
+        /**
+         * Configura la navegación con las flechas del teclado.
+         */
+        function setupKeyboardNavigation() {
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'ArrowLeft') {
+                    // Flecha izquierda: imagen anterior
+                    const prevIndex = (currentIndex - 1 + imageFiles.length) % imageFiles.length;
+                    showImage(prevIndex);
+                } else if (event.key === 'ArrowRight') {
+                    // Flecha derecha: imagen siguiente
+                    const nextIndex = (currentIndex + 1) % imageFiles.length;
+                    showImage(nextIndex);
+                }
+            });
+        }
 
-    <script src="script.js"></script>
+
+        // --- INICIALIZACIÓN DEL CARRUSEL ---
+
+        // 1. Creamos todas las miniaturas
+        createThumbnails();
+
+        // 2. Mostramos la primera imagen al cargar la página
+        if (imageFiles.length > 0) {
+            showImage(0);
+        } else {
+            // Mensaje si no hay imágenes en la lista
+            mainImage.alt = "No se encontraron imágenes en la lista.";
+            thumbnailsContainer.innerHTML = "<p>Por favor, edita el archivo JavaScript y añade los nombres de tus imágenes en la lista 'imageFiles'.</p>";
+        }
+
+        // 3. Activamos la navegación por teclado
+        setupKeyboardNavigation();
+
+    </script>
+
 </body>
 </html>
