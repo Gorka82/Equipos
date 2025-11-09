@@ -14,49 +14,36 @@ document.addEventListener('DOMContentLoaded', () => {
       // etc
     ];
 
-    function crearCarrusel() {
-        carruselElemento.innerHTML = ''; // Limpiamos el carrusel
-        imagenes.forEach(imagen => {
-            const imgElemento = document.createElement('img');
-            imgElemento.src = `imagenes/${imagen}`;
-            imgElemento.alt = imagen;
-            carruselElemento.appendChild(imgElemento);
-        });
-    }
+    let indiceActual = 0;
 
-    function crearIndicadores() {
-        contenedorIndicadores.innerHTML = '';
-        imagenes.forEach((_, index) => {
-            const punto = document.createElement('span');
-            punto.classList.add('punto');
-            if (index === 0) punto.classList.add('activo');
-            punto.addEventListener('click', () => mostrarImagen(index));
-            contenedorIndicadores.appendChild(punto);
-        });
-    }
+    // Referencias a los elementos del DOM
+    const carruselElemento = document.querySelector('.carrusel');
+    const botonAnterior = document.getElementById('botonAnterior');
+    const botonSiguiente = document.getElementById('botonSiguiente');
 
+    // Función para mostrar sólo la imagen actual
     function mostrarImagen(indice) {
-        if (indice >= imagenes.length) {
-            indiceActual = 0;
-        } else if (indice < 0) {
-            indiceActual = imagenes.length - 1;
-        } else {
-            indiceActual = indice;
-        }
+        carruselElemento.innerHTML = ''; // Limpia el carrusel
 
-        const desplazamiento = -indiceActual * 100;
-        carruselElemento.style.transform = `translateX(${desplazamiento}%)`;
-
-        document.querySelectorAll('.punto').forEach((punto, i) => {
-            punto.classList.toggle('activo', i === indiceActual);
-        });
+        const imgElemento = document.createElement('img');
+        imgElemento.src = `imagenes/${imagenes[indice]}`;
+        imgElemento.alt = imagenes[indice];
+        imgElemento.style.width = "100%";
+        imgElemento.style.height = "auto";
+        carruselElemento.appendChild(imgElemento);
     }
 
-    botonSiguiente.addEventListener('click', () => mostrarImagen(indiceActual + 1));
-    botonAnterior.addEventListener('click', () => mostrarImagen(indiceActual - 1));
+    // Avanzar/retroceder en el array
+    botonSiguiente.addEventListener('click', () => {
+        indiceActual = (indiceActual + 1) % imagenes.length;
+        mostrarImagen(indiceActual);
+    });
 
-    crearCarrusel();
-    crearIndicadores();
-    mostrarImagen(0);
+    botonAnterior.addEventListener('click', () => {
+        indiceActual = (indiceActual - 1 + imagenes.length) % imagenes.length;
+        mostrarImagen(indiceActual);
+    });
+
+    // Inicializa mostrando la primera imagen
+    mostrarImagen(indiceActual);
 });
-
