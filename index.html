@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carrusel de Imágenes con Botones</title>
+    <title>Carrusel de Imágenes y Videos</title>
     <style>
         /* --- ESTILOS CSS --- */
 
@@ -25,54 +25,51 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
-        /* Contenedor de la imagen principal con la nueva medida panorámica 800:450 */
-        .main-image-container {
+        /* Contenedor principal donde se mostrará la imagen o el video */
+        .main-media-container {
             width: 800px;
             height: 450px;
-            position: relative; /* Necesario para posicionar los botones */
+            position: relative;
             overflow: hidden;
             margin: 0 auto 20px auto;
             border: 1px solid #ddd;
             border-radius: 4px;
+            background-color: #000; /* Fondo negro para los videos */
         }
 
-        #main-image {
+        /* Estilos comunes para la imagen y el video principales */
+        .main-media-container img,
+        .main-media-container video {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: opacity 0.3s ease-in-out;
+            display: block; /* Elimina espacio extra debajo de los elementos */
         }
-
+        
         /* Estilo para los botones de navegación */
         .nav-button {
             position: absolute;
-            top: 50%; /* Centrado vertical */
+            top: 50%;
             transform: translateY(-50%);
-            background-color: rgba(0, 0, 0, 0.5); /* Fondo semitransparente */
+            background-color: rgba(0, 0, 0, 0.5);
             color: white;
             border: none;
             padding: 15px;
             cursor: pointer;
             font-size: 24px;
             font-weight: bold;
-            border-radius: 50%; /* Botones redondos */
+            border-radius: 50%;
             transition: background-color 0.3s ease, transform 0.2s ease;
-            z-index: 10; /* Asegura que esté encima de la imagen */
+            z-index: 10;
         }
 
         .nav-button:hover {
             background-color: rgba(0, 0, 0, 0.8);
-            transform: translateY(-50%) scale(1.1); /* Efecto de zoom al pasar el ratón */
+            transform: translateY(-50%) scale(1.1);
         }
 
-        /* Posicionamiento específico para cada botón */
-        #prev-btn {
-            left: 15px;
-        }
-
-        #next-btn {
-            right: 15px;
-        }
+        #prev-btn { left: 15px; }
+        #next-btn { right: 15px; }
 
         .thumbnails-container {
             display: flex;
@@ -80,11 +77,10 @@
             gap: 10px;
             flex-wrap: wrap;
         }
-        /* Estilo para cada miniatura */
-        thumbnail {
-            width: 80px;
-            height: 120px; /* Proporción 2:3, similar a 400:600 */
-            object-fit: cover; /* Mantiene la proporción en la miniatura */
+
+        /* Contenedor de cada miniatura (necesario para el icono de play) */
+        .thumbnail-wrapper {
+            position: relative;
             cursor: pointer;
             border: 3px solid transparent;
             opacity: 0.7;
@@ -92,24 +88,46 @@
             border-radius: 4px;
         }
 
-        .thumbnail:hover {
+        .thumbnail-wrapper:hover {
             opacity: 1;
             transform: scale(1.05);
         }
 
-        .thumbnail.active {
+        .thumbnail-wrapper.active {
             border-color: #007bff;
             opacity: 1;
         }
+
+        /* Miniatura de imagen o video */
+        .thumbnail {
+            width: 100px;
+            height: 56px;
+            object-fit: cover;
+            border-radius: 4px;
+            display: block; /* Para que el contenedor se ajuste a la imagen */
+        }
+
+        /* Icono de play para las miniaturas de video */
+        .video-thumbnail::after {
+            content: '▶';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 20px;
+            text-shadow: 0 0 5px rgba(0,0,0,0.8);
+            pointer-events: none; /* Para que no interfiera con el clic */
+        }
+
     </style>
 </head>
 <body>
 
     <div class="carousel-container">
-        <!-- La imagen principal y los botones de navegación -->
-        <div class="main-image-container">
+        <!-- El contenedor principal ahora está vacío. Se llenará con JS. -->
+        <div id="main-media-container" class="main-media-container">
             <button id="prev-btn" class="nav-button">❮</button>
-            <img id="main-image" src="" alt="Imagen principal del carrusel">
             <button id="next-btn" class="nav-button">❯</button>
         </div>
 
@@ -122,40 +140,77 @@
     <script>
         // --- CÓDIGO JAVASCRIPT ---
 
-        // PASO 1: AÑADE AQUÍ LOS NOMBRES DE TUS ARCHIVOS DE IMAGEN
-        // Asegúrate de que los archivos estén en la carpeta '/imagenes'
-        const imageFiles = [
-            'gorkatr.jpg',
-            'images.jpeg',
-            'sithprophecy_esb_pub.jpg'
-            // ... añade más nombres de archivo aquí
+        // PASO 1: DEFINE AQUÍ TUS MEDIOS (IMÁGENES Y VIDEOS)
+        // Usa un objeto para cada elemento.
+        // - type: 'image' o 'video'
+        // - src: el nombre del archivo
+        // - poster (opcional para videos): una imagen de vista previa para la miniatura y el video.
+        const mediaFiles = [
+            { type: 'image', src: 'gorkatr.jpg' },
+            { type: 'image', src: 'images.jpeg' },
+            { type: 'image', src: 'sithprophecy_esb_pub.jpg' }
+            //{ type: 'video', src: 'mi_video_1.mp4', poster: 'poster_video_1.jpg' },
+            //{ type: 'image', src: 'foto2.png' },
+            //{ type: 'video', src: 'otro_video.webm' }, // Sin poster, usará el video como miniatura
+            //{ type: 'image', src: 'paisaje_bonito.jpg' },
+            //{ type: 'video', src: 'video_final.mp4', poster: 'poster_final.jpg' }
         ];
 
-
-        const mainImage = document.getElementById('main-image');
+        const mainMediaContainer = document.getElementById('main-media-container');
         const thumbnailsContainer = document.getElementById('thumbnails-container');
         const prevButton = document.getElementById('prev-btn');
         const nextButton = document.getElementById('next-btn');
 
         let currentIndex = 0;
+        let currentMediaElement = null; // Para guardar la referencia del elemento actual (img o video)
 
         /**
-         * Muestra la imagen en el índice especificado y actualiza las miniaturas.
-         * @param {number} index - El índice de la imagen a mostrar.
+         * Muestra el medio (imagen o video) en el índice especificado.
+         * @param {number} index - El índice del medio a mostrar.
          */
-        function showImage(index) {
-            if (index < 0 || index >= imageFiles.length) {
+        function showMedia(index) {
+            if (index < 0 || index >= mediaFiles.length) {
                 return;
             }
 
-            mainImage.src = 'imagenes/' + imageFiles[index];
-            mainImage.alt = `Imagen ${index + 1}: ${imageFiles[index]}`;
+            const media = mediaFiles[index];
 
-            document.querySelectorAll('.thumbnail').forEach(thumb => {
-                thumb.classList.remove('active');
-            });
+            // Detenemos el video anterior si existe y está reproduciéndose
+            if (currentMediaElement && currentMediaElement.tagName === 'VIDEO') {
+                currentMediaElement.pause();
+            }
+
+            // Limpiamos el contenedor principal
+            mainMediaContainer.innerHTML = ''; 
+            // Volvemos a añadir los botones que se borraron con innerHTML
+            mainMediaContainer.appendChild(prevButton);
+            mainMediaContainer.appendChild(nextButton);
+
+            let newMediaElement;
+
+            if (media.type === 'image') {
+                newMediaElement = document.createElement('img');
+                newMediaElement.src = 'imagenes/' + media.src;
+                newMediaElement.alt = `Imagen ${index + 1}: ${media.src}`;
+            } else if (media.type === 'video') {
+                newMediaElement = document.createElement('video');
+                newMediaElement.src = 'imagenes/' + media.src;
+                newMediaElement.controls = true; // Muestra los controles de reproducción
+                newMediaElement.muted = true;    // Inicia silenciado (buena práctica)
+                if (media.poster) {
+                    newMediaElement.poster = 'imagenes/' + media.poster;
+                }
+            }
             
-            const activeThumbnail = document.querySelector(`.thumbnail[data-index="${index}"]`);
+            // Añadimos el nuevo elemento al contenedor
+            mainMediaContainer.appendChild(newMediaElement);
+            currentMediaElement = newMediaElement; // Actualizamos la referencia
+
+            // Actualizamos la clase 'active' en las miniaturas
+            document.querySelectorAll('.thumbnail-wrapper').forEach(wrapper => {
+                wrapper.classList.remove('active');
+            });
+            const activeThumbnail = document.querySelector(`.thumbnail-wrapper[data-index="${index}"]`);
             if (activeThumbnail) {
                 activeThumbnail.classList.add('active');
             }
@@ -163,55 +218,56 @@
             currentIndex = index;
         }
 
-        /**
-         * Muestra la siguiente imagen en el carrusel.
-         */
-        function showNextImage() {
-            const nextIndex = (currentIndex + 1) % imageFiles.length;
-            showImage(nextIndex);
+        function showNextMedia() {
+            const nextIndex = (currentIndex + 1) % mediaFiles.length;
+            showMedia(nextIndex);
+        }
+
+        function showPrevMedia() {
+            const prevIndex = (currentIndex - 1 + mediaFiles.length) % mediaFiles.length;
+            showMedia(prevIndex);
         }
 
         /**
-         * Muestra la imagen anterior en el carrusel.
-         */
-        function showPrevImage() {
-            const prevIndex = (currentIndex - 1 + imageFiles.length) % imageFiles.length;
-            showImage(prevIndex);
-        }
-
-        /**
-         * Genera las miniaturas en el contenedor correspondiente.
+         * Genera las miniaturas para imágenes y videos.
          */
         function createThumbnails() {
-            imageFiles.forEach((filename, index) => {
-                const thumbImg = document.createElement('img');
-                thumbImg.src = 'imagenes/' + filename;
-                thumbImg.alt = `Miniatura de ${filename}`;
-                thumbImg.classList.add('thumbnail');
-                thumbImg.dataset.index = index;
+            mediaFiles.forEach((media, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.classList.add('thumbnail-wrapper');
+                wrapper.dataset.index = index;
 
-                thumbImg.addEventListener('click', () => {
-                    showImage(index);
+                const thumbImg = document.createElement('img');
+                thumbImg.classList.add('thumbnail');
+
+                if (media.type === 'image') {
+                    thumbImg.src = 'imagenes/' + media.src;
+                } else if (media.type === 'video') {
+                    // Usa el poster si existe, si no, usa el video como src
+                    thumbImg.src = media.poster ? 'imagenes/' + media.poster : 'imagenes/' + media.src;
+                    wrapper.classList.add('video-thumbnail'); // Añade clase para el icono de play
+                }
+                
+                thumbImg.alt = `Miniatura de ${media.src}`;
+                wrapper.appendChild(thumbImg);
+
+                wrapper.addEventListener('click', () => {
+                    showMedia(index);
                 });
 
-                thumbnailsContainer.appendChild(thumbImg);
+                thumbnailsContainer.appendChild(wrapper);
             });
         }
         
-        /**
-         * Configura los eventos de navegación (botones y teclado).
-         */
         function setupNavigation() {
-            // Eventos para los botones
-            nextButton.addEventListener('click', showNextImage);
-            prevButton.addEventListener('click', showPrevImage);
+            nextButton.addEventListener('click', showNextMedia);
+            prevButton.addEventListener('click', showPrevMedia);
 
-            // Eventos para el teclado
             document.addEventListener('keydown', (event) => {
                 if (event.key === 'ArrowRight') {
-                    showNextImage();
+                    showNextMedia();
                 } else if (event.key === 'ArrowLeft') {
-                    showPrevImage();
+                    showPrevMedia();
                 }
             });
         }
@@ -220,11 +276,10 @@
 
         createThumbnails();
 
-        if (imageFiles.length > 0) {
-            showImage(0);
+        if (mediaFiles.length > 0) {
+            showMedia(0);
         } else {
-            mainImage.alt = "No se encontraron imágenes en la lista.";
-            thumbnailsContainer.innerHTML = "<p>Por favor, edita el archivo JavaScript y añade los nombres de tus imágenes en la lista 'imageFiles'.</p>";
+            mainMediaContainer.innerHTML = "<p style='color:white; padding-top: 200px;'>No se encontraron medios en la lista.</p>";
         }
 
         setupNavigation();
@@ -233,7 +288,3 @@
 
 </body>
 </html>
-
-
-
-
