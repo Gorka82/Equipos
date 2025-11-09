@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carrusel de Imágenes Sencillo</title>
+    <title>Carrusel de Imágenes con Botones</title>
     <style>
         /* --- ESTILOS CSS --- */
 
-        /* Estilos generales para centrar el carrusel en la página */
         body {
             font-family: sans-serif;
             background-color: #f0f2f5;
@@ -18,7 +17,6 @@
             margin: 0;
         }
 
-        /* Contenedor principal del carrusel */
         .carousel-container {
             text-align: center;
             padding: 20px;
@@ -27,35 +25,63 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
-        /* Contenedor de la imagen principal con la medida fija 400:600 */
+        /* Contenedor de la imagen principal con la nueva medida panorámica 800:450 */
         .main-image-container {
-            width: 400px;
-            height: 600px;
-            overflow: hidden; /* Oculta las partes de la imagen que sobresalen */
-            margin: 0 auto 20px auto; /* Centra y añade espacio debajo */
+            width: 800px;
+            height: 450px;
+            position: relative; /* Necesario para posicionar los botones */
+            overflow: hidden;
+            margin: 0 auto 20px auto;
             border: 1px solid #ddd;
             border-radius: 4px;
         }
 
-        /* La imagen principal */
         #main-image {
             width: 100%;
             height: 100%;
-            /* ¡Esta es la clave! Ajusta la imagen para cubrir el contenedor sin deformarse */
-            object-fit: cover; 
+            object-fit: cover;
             transition: opacity 0.3s ease-in-out;
         }
 
-        /* Contenedor de las miniaturas */
+        /* Estilo para los botones de navegación */
+        .nav-button {
+            position: absolute;
+            top: 50%; /* Centrado vertical */
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.5); /* Fondo semitransparente */
+            color: white;
+            border: none;
+            padding: 15px;
+            cursor: pointer;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 50%; /* Botones redondos */
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            z-index: 10; /* Asegura que esté encima de la imagen */
+        }
+
+        .nav-button:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+            transform: translateY(-50%) scale(1.1); /* Efecto de zoom al pasar el ratón */
+        }
+
+        /* Posicionamiento específico para cada botón */
+        #prev-btn {
+            left: 15px;
+        }
+
+        #next-btn {
+            right: 15px;
+        }
+
         .thumbnails-container {
             display: flex;
             justify-content: center;
-            gap: 10px; /* Espacio entre miniaturas */
-            flex-wrap: wrap; /* Permite que las miniaturas pasen a la siguiente línea si no caben */
+            gap: 10px;
+            flex-wrap: wrap;
         }
-
         /* Estilo para cada miniatura */
-        .thumbnail {
+        thumbnail {
             width: 80px;
             height: 120px; /* Proporción 2:3, similar a 400:600 */
             object-fit: cover; /* Mantiene la proporción en la miniatura */
@@ -66,15 +92,13 @@
             border-radius: 4px;
         }
 
-        /* Efecto al pasar el ratón sobre una miniatura */
         .thumbnail:hover {
             opacity: 1;
             transform: scale(1.05);
         }
 
-        /* Resalta la miniatura de la imagen activa */
         .thumbnail.active {
-            border-color: #007bff; /* Un azul para el borde activo */
+            border-color: #007bff;
             opacity: 1;
         }
     </style>
@@ -82,12 +106,14 @@
 <body>
 
     <div class="carousel-container">
-        <!-- La imagen principal que cambiará -->
+        <!-- La imagen principal y los botones de navegación -->
         <div class="main-image-container">
+            <button id="prev-btn" class="nav-button">❮</button>
             <img id="main-image" src="" alt="Imagen principal del carrusel">
+            <button id="next-btn" class="nav-button">❯</button>
         </div>
 
-        <!-- Aquí se insertarán las miniaturas con JavaScript -->
+        <!-- Contenedor para las miniaturas -->
         <div id="thumbnails-container" class="thumbnails-container">
             <!-- Las miniaturas se generarán dinámicamente -->
         </div>
@@ -101,44 +127,56 @@
         const imageFiles = [
             'gorkatr.jpg',
             'images.jpeg',
-            'marca de agua legalitas.psd',
             'sithprophecy_esb_pub.jpg'
             // ... añade más nombres de archivo aquí
         ];
 
-        // Obtenemos los elementos del DOM que vamos a manipular
+
         const mainImage = document.getElementById('main-image');
         const thumbnailsContainer = document.getElementById('thumbnails-container');
+        const prevButton = document.getElementById('prev-btn');
+        const nextButton = document.getElementById('next-btn');
 
-        let currentIndex = 0; // Índice de la imagen actual
+        let currentIndex = 0;
 
         /**
          * Muestra la imagen en el índice especificado y actualiza las miniaturas.
          * @param {number} index - El índice de la imagen a mostrar.
          */
         function showImage(index) {
-            // Aseguramos de que el índice esté dentro de los límites del array
             if (index < 0 || index >= imageFiles.length) {
                 return;
             }
 
-            // Cambiamos la fuente de la imagen principal
             mainImage.src = 'imagenes/' + imageFiles[index];
             mainImage.alt = `Imagen ${index + 1}: ${imageFiles[index]}`;
 
-            // Actualizamos la clase 'active' en las miniaturas
-            // Primero, la quitamos de todas
             document.querySelectorAll('.thumbnail').forEach(thumb => {
                 thumb.classList.remove('active');
             });
-            // Luego, la añadimos a la miniatura correspondiente
+            
             const activeThumbnail = document.querySelector(`.thumbnail[data-index="${index}"]`);
             if (activeThumbnail) {
                 activeThumbnail.classList.add('active');
             }
             
-            // Actualizamos el índice actual
             currentIndex = index;
+        }
+
+        /**
+         * Muestra la siguiente imagen en el carrusel.
+         */
+        function showNextImage() {
+            const nextIndex = (currentIndex + 1) % imageFiles.length;
+            showImage(nextIndex);
+        }
+
+        /**
+         * Muestra la imagen anterior en el carrusel.
+         */
+        function showPrevImage() {
+            const prevIndex = (currentIndex - 1 + imageFiles.length) % imageFiles.length;
+            showImage(prevIndex);
         }
 
         /**
@@ -150,11 +188,8 @@
                 thumbImg.src = 'imagenes/' + filename;
                 thumbImg.alt = `Miniatura de ${filename}`;
                 thumbImg.classList.add('thumbnail');
-                
-                // Guardamos el índice en un atributo 'data-*' para saber a qué imagen corresponde
                 thumbImg.dataset.index = index;
 
-                // Añadimos un evento 'click' para mostrar la imagen al hacer clic
                 thumbImg.addEventListener('click', () => {
                     showImage(index);
                 });
@@ -164,43 +199,41 @@
         }
         
         /**
-         * Configura la navegación con las flechas del teclado.
+         * Configura los eventos de navegación (botones y teclado).
          */
-        function setupKeyboardNavigation() {
+        function setupNavigation() {
+            // Eventos para los botones
+            nextButton.addEventListener('click', showNextImage);
+            prevButton.addEventListener('click', showPrevImage);
+
+            // Eventos para el teclado
             document.addEventListener('keydown', (event) => {
-                if (event.key === 'ArrowLeft') {
-                    // Flecha izquierda: imagen anterior
-                    const prevIndex = (currentIndex - 1 + imageFiles.length) % imageFiles.length;
-                    showImage(prevIndex);
-                } else if (event.key === 'ArrowRight') {
-                    // Flecha derecha: imagen siguiente
-                    const nextIndex = (currentIndex + 1) % imageFiles.length;
-                    showImage(nextIndex);
+                if (event.key === 'ArrowRight') {
+                    showNextImage();
+                } else if (event.key === 'ArrowLeft') {
+                    showPrevImage();
                 }
             });
         }
 
-
         // --- INICIALIZACIÓN DEL CARRUSEL ---
 
-        // 1. Creamos todas las miniaturas
         createThumbnails();
 
-        // 2. Mostramos la primera imagen al cargar la página
         if (imageFiles.length > 0) {
             showImage(0);
         } else {
-            // Mensaje si no hay imágenes en la lista
             mainImage.alt = "No se encontraron imágenes en la lista.";
             thumbnailsContainer.innerHTML = "<p>Por favor, edita el archivo JavaScript y añade los nombres de tus imágenes en la lista 'imageFiles'.</p>";
         }
 
-        // 3. Activamos la navegación por teclado
-        setupKeyboardNavigation();
+        setupNavigation();
 
     </script>
 
 </body>
 </html>
+
+
 
 
